@@ -1,0 +1,46 @@
+Found 15 bills
+  Item: Chicken Briyani, Qty: 1.0, Price: 220.0, Rev: 220.0
+  Item: Chicken Briyani, Qty: 1.0, Price: 220.0, Rev: 220.0
+  Item: Mutton Briyani, Qty: 1.0, Price: 320.0, Rev: 320.0
+  Item: Veg Fried Rice, Qty: 1.0, Price: 180.0, Rev: 180.0
+  Item: Chicken Briyani, Qty: 1.0, Price: 220.0, Rev: 220.0
+  Item: Mutton Briyani, Qty: 1.0, Price: 320.0, Rev: 320.0
+  Item: Veg Fried Rice, Qty: 1.0, Price: 180.0, Rev: 180.0
+  Item: Mutton Briyani, Qty: 1.0, Price: 320.0, Rev: 320.0
+  Item: Tandoori Chicken, Qty: 1.0, Price: 350.0, Rev: 350.0
+  Item: Ice Cream, Qty: 1.0, Price: 90.0, Rev: 90.0
+  Item: Chicken Briyani, Qty: 1.0, Price: 220.0, Rev: 220.0
+  Item: Paneer Butter Masala, Qty: 1.0, Price: 240.0, Rev: 240.0
+  Item: Chicken Briyani, Qty: 1.0, Price: 220.0, Rev: 220.0
+  Item: Veg Fried Rice, Qty: 1.0, Price: 180.0, Rev: 180.0
+  Item: Paneer Butter Masala, Qty: 1.0, Price: 240.0, Rev: 240.0
+  Item: Veg Fried Rice, Qty: 1.0, Price: 180.0, Rev: 180.0
+  Item: Shawarma, Qty: 1.0, Price: 160.0, Rev: 160.0
+  Item: Chicken Briyani, Qty: 1.0, Price: 220.0, Rev: 220.0
+  Item: Paneer Butter Masala, Qty: 1.0, Price: 240.0, Rev: 240.0
+  Item: Idli, Qty: 1.0, Price: 40.0, Rev: 40.0
+  Item: Dosa, Qty: 1.0, Price: 70.0, Rev: 70.0
+  Item: Chicken Briyani, Qty: 1.0, Price: 220.0, Rev: 220.0
+  Item: Tandoori Chicken, Qty: 1.0, Price: 350.0, Rev: 350.0
+  Item: Ice Cream, Qty: 1.0, Price: 90.0, Rev: 90.0
+  Item: Paneer Butter Masala, Qty: 1.0, Price: 240.0, Rev: 240.0
+  Item: Veg Fried Rice, Qty: 1.0, Price: 180.0, Rev: 180.0
+  Item: Chicken Briyani, Qty: 1.0, Price: 220.0, Rev: 220.0
+  Item: Mutton Briyani, Qty: 1.0, Price: 320.0, Rev: 320.0
+  Item: Butter Chicken, Qty: 1.0, Price: 260.0, Rev: 260.0
+  Item: Veg Fried Rice, Qty: 1.0, Price: 180.0, Rev: 180.0
+  Item: Chicken Briyani, Qty: 1.0, Price: 220.0, Rev: 220.0
+  Item: Mutton Briyani, Qty: 1.0, Price: 320.0, Rev: 320.0
+Found 15 foods in DB
+Category map: {'Chicken Briyani': 'Non-Veg', 'Mutton Briyani': 'Non-Veg', 'Veg Fried Rice': 'Veg', 'Chicken Fried Rice': 'Non-Veg', 'Butter Chicken': 'Non-Veg', 'Paneer Butter Masala': 'Veg', 'Tandoori Chicken': 'Non-Veg', 'Shawarma': 'Non-Veg', 'Parotta': 'Veg', 'Kothu Parotta': 'Non-Veg', 'Idli': 'Veg', 'Dosa': 'Veg', 'Meals': 'Veg', 'Fish Fry': 'Non-Veg', 'Ice Cream': 'Dessert'}
+  Matched: Chicken Briyani -> non-veg -> Non-Veg (Rev: 1980.0)
+  Matched: Mutton Briyani -> non-veg -> Non-Veg (Rev: 1600.0)
+  Matched: Veg Fried Rice -> veg -> Veg (Rev: 1080.0)
+  Matched: Tandoori Chicken -> non-veg -> Non-Veg (Rev: 700.0)
+  Matched: Ice Cream -> dessert -> Dessert (Rev: 180.0)
+  Matched: Paneer Butter Masala -> veg -> Veg (Rev: 960.0)
+  Matched: Shawarma -> non-veg -> Non-Veg (Rev: 160.0)
+  Matched: Idli -> veg -> Veg (Rev: 40.0)
+  Matched: Dosa -> veg -> Veg (Rev: 70.0)
+  Matched: Butter Chicken -> non-veg -> Non-Veg (Rev: 260.0)
+Final Category Sales: {'Veg': 2150.0, 'Non-Veg': 4700.0, 'Dessert': 180.0}

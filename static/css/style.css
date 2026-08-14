@@ -1,0 +1,260 @@
+:root {
+    --primary-color: #FF9800;
+    --primary-hover: #F57C00;
+    --secondary-color: #263238;
+    --accent-color: #ffffff;
+    --success-color: #4CAF50;
+    --danger-color: #F44336;
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.3);
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    color: var(--secondary-color);
+    overflow-x: hidden;
+}
+
+/* Glassmorphism Classes */
+.glass-card {
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 1.5rem;
+    box-shadow: 0 8px 32px 0 rgba(176, 177, 185, 0.1);
+}
+
+.glass-sidebar {
+    width: 280px;
+    height: 100vh;
+    background: url('../images/bgsidebar.png') no-repeat center center;
+    background-size: cover;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    position: fixed;
+    /* Make it fixed */
+    overflow: hidden;
+
+}
+
+.glass-sidebar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.277);
+    /* Clean white glass */
+    backdrop-filter: blur(2px);
+    z-index: -1;
+}
+
+.glass-sidebar>* {
+    position: relative;
+    z-index: 1;
+}
+
+#page-content-wrapper {
+    margin-left: 280px;
+    /* Offset content by sidebar width */
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+#wrapper.toggled .glass-sidebar {
+    transform: translateX(-320px);
+    opacity: 0;
+}
+
+#wrapper.toggled #page-content-wrapper {
+    margin-left: 0;
+}
+
+.list-group-item {
+    border: none;
+    padding: 1rem 1.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 1rem !important;
+    font-weight: 500;
+    color: #000000;
+    transition: all 0.3s ease;
+}
+
+.list-group-item:hover,
+.list-group-item.active {
+    background: var(--primary-color) !important;
+    color: white !important;
+    transform: translateX(5px);
+}
+
+.navbar {
+    padding: 1rem 1.5rem;
+}
+
+/* Dashboard Cards */
+.stat-card {
+    border-radius: 1.5rem;
+    padding: 2rem;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.stat-card:hover {
+    transform: translateY(-10px);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 1rem;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Food Cards */
+.food-card {
+    border: none;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.food-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.food-img-container {
+    height: 180px;
+    position: relative;
+    overflow: hidden;
+}
+
+.food-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.food-card:hover .food-img {
+    transform: scale(1.1);
+}
+
+.category-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0.3rem 0.8rem;
+    border-radius: 2rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* Billing Panel */
+.bill-panel {
+    background: white;
+    border-radius: 1.5rem;
+    padding: 1.5rem;
+    height: calc(100vh - 120px);
+    display: flex;
+    flex-direction: column;
+}
+
+.bill-items-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin: 1rem 0;
+}
+
+.bill-item {
+    padding: 0.8rem;
+    border-radius: 1rem;
+    background: #f8f9fa;
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.qty-btn {
+    width: 25px;
+    height: 25px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+}
+
+/* Animations */
+.fade-in {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Drag and Drop Styles */
+.food-card[draggable="true"] {
+    cursor: grab;
+}
+
+.food-card[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+.food-card.dragging {
+    opacity: 0.5;
+    transform: scale(1.05);
+    box-shadow: 0 20px 40px rgba(255, 152, 0, 0.4) !important;
+    transition: all 0.15s ease;
+}
+
+.drop-zone.drop-target,
+.drop-zone.drag-over {
+    border: 2px dashed #FF9800 !important;
+    background: rgba(255, 152, 0, 0.07) !important;
+    transition: all 0.2s ease;
+}
+
+.drop-zone {
+    transition: border 0.2s ease, background 0.2s ease;
+}
+
+/* Responsive Fixes */
+@media (max-width: 991.98px) {
+    .glass-sidebar {
+        margin-left: -280px;
+    }
+
+    #page-content-wrapper {
+        margin-left: 0;
+    }
+
+    #wrapper.toggled .glass-sidebar {
+        margin-left: 0;
+    }
+
+    #wrapper.toggled #page-content-wrapper {
+        margin-left: 0;
+    }
+}

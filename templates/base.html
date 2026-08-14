@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grand serve | {% block title %}{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo - Copy.png') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body class="bg-light">
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        <div class="glass-sidebar" id="sidebar-wrapper">
+            <div class="sidebar-heading text-center py-4">
+                <img src="{{ url_for('static', filename='images/logo - Copy.png') }}" alt="Logo"
+                    style="height: 90px; filter: drop-shadow(0 0 20px rgba(255, 152, 0, 0.8));"
+                    class="mb-3 mt-2 sidebar-logo">
+                <h4 class="fw-bold " style="color: #c29202;">Grand serve</h4>
+            </div>
+            <div class="list-group list-group-flush px-3 ">
+                <a href="/dashboard"
+                    class="list-group-item list-group-item-action bg-transparent {% if request.path == '/dashboard' %}active{% endif %}">
+                    <i class="fas fa-th-large me-2"></i> Dashboard
+                </a>
+                <a href="/billing"
+                    class="list-group-item list-group-item-action bg-transparent {% if request.path == '/billing' %}active{% endif %}">
+                    <i class="fas fa-file-invoice-dollar me-2"></i> Billing
+                </a>
+                <a href="/history"
+                    class="list-group-item list-group-item-action bg-transparent {% if request.path == '/history' %}active{% endif %}">
+                    <i class="fas fa-history me-2"></i> Bill History
+                </a>
+                <a href="/reports"
+                    class="list-group-item list-group-item-action bg-transparent {% if request.path == '/reports' %}active{% endif %}">
+                    <i class="fas fa-chart-line me-2"></i> Sales Reports
+                </a>
+                <a href="/settings"
+                    class="list-group-item list-group-item-action bg-transparent {% if request.path == '/settings' %}active{% endif %}">
+                    <i class="fas fa-cog me-2"></i> Settings
+                </a>
+                <div class="mt-auto mb-4">
+                    <button id="logoutBtn" class="btn btn-outline-danger w-100 mt-4 rounded-pill">
+                        <i class="fas fa-sign-out-alt me-2"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- /#sidebar-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+            <nav class="navbar navbar-expand-lg navbar-light border-bottom px-4 glass-nav sticky-top"
+                style="background: lawngreen;">
+                <button class="btn btn-primary rounded-circle me-3" id="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="d-flex align-items-center">
+                    <img src="{{ url_for('static', filename='images/logo - Copy.png') }}" alt="Logo" height="40"
+                        class="me-3" style="filter: drop-shadow(0 0 5px rgba(0,0,0,0.1));">
+                    <h4 class="mb-0 fw-bold">{% block page_title %}{% endblock %}</h4>
+                </div>
+                <div class="ms-auto d-flex align-items-center">
+                    <div class="dropdown">
+                        <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle"
+                            id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="{{ url_for('static', filename='images/logo - Copy.png') }}" alt="mdo" width="45"
+                                height="45" class="rounded-circle me-2 bg-white p-1"
+                                style="box-shadow: 0 0 15px rgba(255, 152, 0, 0.8);">
+                            <span class="d-none d-sm-inline mx-1 fw-bold text-dark">{{ session.get('user', 'Administrator') }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end text-small shadow" aria-labelledby="dropdownUser1">
+                            <li><a class="dropdown-item" href="/settings">Profile</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="#" id="logoutLink">Sign out</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container-fluid p-4">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+        <!-- /#page-content-wrapper -->
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- AOS Animation -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <!-- SortableJS -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        AOS.init();
+
+        // Sidebar Toggle
+        const menuToggle = document.getElementById('menu-toggle');
+        const wrapper = document.getElementById('wrapper');
+        if (menuToggle) {
+            menuToggle.onclick = function () {
+                wrapper.classList.toggle('toggled');
+            };
+        }
+
+        // Logout
+        document.querySelectorAll('#logoutBtn, #logoutLink').forEach(btn => {
+            btn.onclick = async () => {
+                const res = await fetch('/api/auth/logout', { method: 'POST' });
+                if (res.ok) window.location.reload();
+            };
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,407 @@
+{% extends "base.html" %}
+{% block title %}Billing{% endblock %}
+{% block page_title %}New Order & Billing{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ───────────────── Billing Layout Improvements ───────────────── */
+    .food-menu-container {
+        padding-right: 15px;
+    }
+
+    body {
+        background: #f8fafc !important;
+        /* Fallback color */
+    }
+
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('{{ url_for("static", filename="images/bgbill.jpeg") }}') no-repeat center center fixed !important;
+        background-size: cover !important;
+        filter: blur(5px);
+        z-index: -1;
+        transform: scale(1.1);
+        /* Prevents white edges from the blur */
+    }
+
+    .bill-panel-sticky {
+        position: sticky;
+        top: 100px;
+        max-height: calc(100vh - 120px);
+        display: flex;
+        flex-direction: column;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        background: #fff !important;
+    }
+
+    /* ───────────────── Modern Food Cards ───────────────── */
+    .lux-card {
+        border: none;
+        border-radius: 1.25rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: #fff;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .lux-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .food-img-lux {
+        height: 160px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .food-img-lux img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .lux-card:hover .food-img-lux img {
+        transform: scale(1.1);
+    }
+
+    .badge-lux {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(4px);
+        color: var(--primary-color);
+        font-weight: 700;
+        font-size: 0.75rem;
+        padding: 5px 12px;
+        border-radius: 2rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* ───────────────── Bill Item Rows ───────────────── */
+    .bill-item-lux {
+        background: #f8fafc;
+        border-radius: 1rem;
+        padding: 0.85rem 1rem;
+        margin-bottom: 0.75rem;
+        border: 1px solid #edf2f7;
+        transition: all 0.2s;
+    }
+
+    .bill-item-lux:hover {
+        background: #f1f5f9;
+        border-color: #e2e8f0;
+    }
+
+    .qty-btn-lux {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        color: #64748b;
+        transition: all 0.2s;
+        font-size: 0.8rem;
+    }
+
+    .qty-btn-lux:hover {
+        background: var(--primary-color);
+        color: #fff;
+        border-color: var(--primary-color);
+    }
+
+    .bill-summary-lux {
+        background: #fafafa;
+        border-radius: 1.25rem;
+        padding: 1.25rem;
+        margin-top: auto;
+    }
+
+    /* ───────────────── Search & Filter ───────────────── */
+    .search-input-lux {
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        padding-left: 2.5rem;
+        height: 45px;
+    }
+
+    .search-input-lux:focus {
+        background: #fff;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
+    }
+
+    .filter-icon {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+    }
+
+    /* ───────────────── Scrollbar ───────────────── */
+    #billItems::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    #billItems::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+
+    /* ───────────────── Print Optimization ───────────────── */
+    @media print {
+        @page {
+            size: auto;
+            margin: 10mm;
+        }
+
+        body {
+            background: #fff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        body::before,
+        #sidebar-wrapper,
+        .navbar,
+        .main-panel-header,
+        .modal-footer,
+        .modal-header,
+        .modal-backdrop,
+        .btn,
+        .food-menu-container,
+        .bill-panel,
+        .glass-card,
+        .glass-nav,
+        .modal-header,
+        .modal-footer,
+        #menu-toggle {
+            display: none !important;
+        }
+
+        #wrapper, #page-content-wrapper, .container-fluid {
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            background: #fff !important;
+        }
+
+        .modal {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            display: block !important;
+            background: #fff !important;
+            opacity: 1 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        .modal-dialog {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+        }
+
+        .modal-content {
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            background: #fff !important;
+            width: 100% !important;
+        }
+
+        .modal-dialog {
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .modal-content {
+            border: 1px solid #eee !important;
+            border-radius: 1.5rem !important;
+            box-shadow: none !important;
+            background: #fff !important;
+            width: 100% !important;
+            max-width: 800px !important;
+            margin: 0 auto !important;
+        }
+
+        #printableInvoice {
+            display: block !important;
+            padding: 0 !important;
+            background: #fff !important;
+        }
+
+        /* Preserve the p-4 padding inside the invoice */
+        #printableInvoice>div {
+            padding: 2rem !important;
+        }
+
+        /* Restore visibility of colored elements */
+        .text-primary {
+            color: #FF9800 !important;
+        }
+
+        .bg-primary {
+            background-color: #FF9800 !important;
+        }
+
+        .bg-opacity-10 {
+            background-color: rgba(255, 152, 0, 0.1) !important;
+        }
+
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- Food Menu Section -->
+    <div class="col-lg-8" data-aos="fade-right">
+        <div class="glass-card bg-white p-4 food-menu-container">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+                <div>
+                    <h5 class="fw-bold mb-1">Cuisine Selection</h5>
+                    <p class="text-muted small mb-0">Browse and add items to the current bill</p>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <div class="position-relative">
+                        <i class="fas fa-search filter-icon"></i>
+                        <input type="text" id="foodSearch" class="form-control rounded-pill search-input-lux"
+                            placeholder="Search menu..." style="width: 220px;">
+                    </div>
+                    <select id="categoryFilter" class="form-select rounded-pill" style="width: 140px; height: 45px;">
+                        <option value="all">All Items</option>
+                        <option value="Veg">Veg Only</option>
+                        <option value="Non-Veg">Non-Veg</option>
+                        <option value="Dessert">Desserts</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row row-cols-1 row-cols-md-3 g-4" id="foodContainer">
+                <!-- Data populated by billing.js -->
+                <div class="col-12 text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Billing Panel -->
+    <div class="col-lg-4">
+        <div class="bill-panel glass-card shadow-lg sticky-top" style="top: 100px;">
+            <div class="text-center mb-3">
+                <h5 class="fw-bold text-primary mb-1">CURRENT BILL</h5>
+                <p class="text-muted small mb-0" id="billDateTime"></p>
+            </div>
+
+            <div class="mb-3">
+                <input type="text" id="custName" class="form-control form-control-sm mb-2 rounded-pill"
+                    placeholder="Customer Name">
+                <input type="text" id="tableNo" class="form-control form-control-sm rounded-pill"
+                    placeholder="Table Number">
+            </div>
+
+            <div class="drop-zone border-dashed rounded-3 p-2 flex-grow-1 overflow-auto" id="billItems"
+                style="min-height: 200px; border: 2px dashed #ddd;">
+                <div class="text-center py-4 text-muted empty-msg"
+                    style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:150px;">
+                    <i class="fas fa-hand-point-up fa-3x mb-3 opacity-25" style="animation: bounce 2s infinite;"></i>
+                    <p class="mb-0 small">Drag &amp; drop items here<br>or use <strong>Add to Bill</strong></p>
+                </div>
+                <!-- Bill items will appear here -->
+            </div>
+
+            <div class="mt-3 border-top pt-3">
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Subtotal</span>
+                    <span class="fw-bold">₹<span id="subtotal">0.00</span></span>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span>GST (<span id="taxRate">5</span>%)</span>
+                    <span class="fw-bold">₹<span id="gstAmount">0.00</span></span>
+                </div>
+                <div class="d-flex justify-content-between mb-3 fs-4 text-primary fw-bold border-top pt-2">
+                    <span>Total</span>
+                    <span>₹<span id="grandTotal">0.00</span></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="small text-muted mb-1 d-block">Payment Method</label>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="payment" id="payCash" value="Cash" checked>
+                        <label class="btn btn-outline-secondary btn-sm" for="payCash">Cash</label>
+
+                        <input type="radio" class="btn-check" name="payment" id="payCard" value="Card">
+                        <label class="btn btn-outline-secondary btn-sm" for="payCard">Card</label>
+
+                        <input type="radio" class="btn-check" name="payment" id="payUPI" value="UPI">
+                        <label class="btn btn-outline-secondary btn-sm" for="payUPI">UPI</label>
+                    </div>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-6">
+                        <button class="btn btn-outline-danger w-100 rounded-pill btn-sm" id="clearBill">
+                            <i class="fas fa-trash me-1"></i> Clear
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="btn btn-primary w-100 rounded-pill btn-sm" id="saveAndPrint">
+                            <i class="fas fa-print me-1"></i> Print Bill
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modern Invoice Modal -->
+<div class="modal fade" id="invoiceModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 1.5rem;">
+            <div class="modal-body p-0" id="printableInvoice">
+                <!-- Content injected via JS -->
+            </div>
+            <div class="modal-footer border-0 p-4 bg-light">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                    data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4" onclick="window.print()">
+                    <i class="fas fa-print me-2"></i> Print Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/billing.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}System Settings{% endblock %}
+{% block extra_css %}
+<style>
+    body {
+        font-family: 'Outfit', sans-serif;
+        background: #f8fafc;
+    }
+
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('{{ url_for("static", filename="images/bgset.jpg") }}') no-repeat center center fixed;
+        background-size: cover;
+        z-index: -1;
+        filter: blur(7px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="glass-card bg-white p-4 h-100">
+            <h5 class="fw-bold mb-4"><i class="fas fa-hotel me-2 text-primary"></i>Hotel Information</h5>
+            <form id="settingsForm">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Hotel Name</label>
+                    <input type="text" class="form-control rounded-pill" id="hotel_name" name="hotel_name">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Address</label>
+                    <textarea class="form-control rounded-4" id="address" name="address" rows="3"></textarea>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-bold">GST Number</label>
+                        <input type="text" class="form-control rounded-pill" id="gst_number" name="gst_number">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-bold">Tax Percentage (%)</label>
+                        <input type="number" step="0.1" class="form-control rounded-pill" id="tax_percentage"
+                            name="tax_percentage">
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-bold">Hotel Logo (URL)</label>
+                    <input type="text" class="form-control rounded-pill" id="logo_url" name="logo_url"
+                        placeholder="https://example.com/logo.png">
+                </div>
+                <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold">
+                    <i class="fas fa-save me-2"></i> Save Changes
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="glass-card bg-white p-4 h-100">
+            <h5 class="fw-bold mb-4"><i class="fas fa-user-shield me-2 text-primary"></i>Admin Password</h5>
+            <form id="passwordForm">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Current Password</label>
+                    <input type="password" class="form-control rounded-pill">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">New Password</label>
+                    <input type="password" class="form-control rounded-pill">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-bold">Confirm New Password</label>
+                    <input type="password" class="form-control rounded-pill">
+                </div>
+                <button type="button" class="btn btn-outline-secondary w-100 rounded-pill py-2 fw-bold"
+                    onclick="Swal.fire('Info', 'Password change is disabled in demo mode', 'info')">
+                    Update Password
+                </button>
+            </form>
+
+            <hr class="my-4">
+
+            <h5 class="fw-bold mb-4"><i class="fas fa-database me-2 text-primary"></i>Database Management</h5>
+            <div class="d-grid gap-2">
+                <button class="btn btn-light rounded-pill text-start px-4 py-3"
+                    onclick="Swal.fire('Success', 'Backup created and downloaded!', 'success')">
+                    <i class="fas fa-download me-2 text-success"></i> Backup Database (JSON)
+                </button>
+                <button class="btn btn-light rounded-pill text-start px-4 py-3"
+                    onclick="Swal.fire('Info', 'Database optimization complete!', 'info')">
+                    <i class="fas fa-broom me-2 text-warning"></i> Optimize Database
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Menu Management Row ── -->
+<div class="row g-4 mt-2">
+    <div class="col-12">
+        <div class="glass-card bg-white p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold mb-0"><i class="fas fa-utensils me-2 text-primary"></i>Menu Management</h5>
+                <button class="btn btn-primary rounded-pill px-4 fw-bold" data-bs-toggle="modal"
+                    data-bs-target="#addDishModal">
+                    <i class="fas fa-plus me-2"></i> Add New Dish
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="border-0">Dish</th>
+                            <th class="border-0">Category</th>
+                            <th class="border-0">Price</th>
+                            <th class="border-0">Status</th>
+                            <th class="border-0 text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="foodTableBody">
+                        <!-- Loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Dish Modal -->
+<div class="modal fade" id="editDishModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Edit Dish Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="editDishForm">
+                    <input type="hidden" name="id" id="edit_food_id">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Dish Name</label>
+                        <input type="text" class="form-control rounded-pill" name="name" id="edit_food_name" required>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Price (₹)</label>
+                            <input type="number" class="form-control rounded-pill" name="price" id="edit_food_price" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Category</label>
+                            <select class="form-select rounded-pill" name="category" id="edit_food_category" required>
+                                <option value="Veg">Veg</option>
+                                <option value="Non-Veg">Non-Veg</option>
+                                <option value="Dessert">Dessert</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold">Image URL</label>
+                        <input type="text" class="form-control rounded-pill" name="image_url" id="edit_food_image_url">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold">
+                        Update Dish
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Dish Modal -->
+<div class="modal fade" id="addDishModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Create New Dish</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="addDishForm">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Dish Name</label>
+                        <input type="text" class="form-control rounded-pill" name="name" required
+                            placeholder="e.g. Garlic Naan">
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Price (₹)</label>
+                            <input type="number" class="form-control rounded-pill" name="price" required
+                                placeholder="0.00">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold">Category</label>
+                            <select class="form-select rounded-pill" name="category" required>
+                                <option value="Veg">Veg</option>
+                                <option value="Non-Veg">Non-Veg</option>
+                                <option value="Dessert">Dessert</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold">Image URL (Optional)</label>
+                        <input type="text" class="form-control rounded-pill" name="image_url"
+                            placeholder="https://images.unsplash.com/...">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold">
+                        Add to Menu
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        loadSettings();
+        loadFoods();
+        document.getElementById('settingsForm').onsubmit = saveSettings;
+        document.getElementById('addDishForm').onsubmit = addDish;
+    });
+
+    async function loadSettings() {
+        const res = await fetch('/api/settings/');
+        const data = await res.json();
+
+        document.getElementById('hotel_name').value = data.hotel_name;
+        document.getElementById('address').value = data.address;
+        document.getElementById('gst_number').value = data.gst_number;
+        document.getElementById('tax_percentage').value = data.tax_percentage;
+        document.getElementById('logo_url').value = data.logo_url || '';
+    }
+
+    let allFoods = [];
+
+    async function loadFoods() {
+        const res = await fetch('/api/settings/food');
+        allFoods = await res.json();
+        const tbody = document.getElementById('foodTableBody');
+        tbody.innerHTML = '';
+
+        allFoods.forEach(f => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-3 bg-light p-1 me-3" style="width: 40px; height: 40px; overflow: hidden;">
+                            <img src="${f.image_url || 'https://via.placeholder.com/40'}" class="w-100 h-100 object-fit-cover">
+                        </div>
+                        <div class="fw-bold">${f.name}</div>
+                    </div>
+                </td>
+                <td><span class="badge rounded-pill bg-opacity-10 ${f.category === 'Veg' ? 'bg-success text-success' : 'bg-danger text-danger'}">${f.category}</span></td>
+                <td class="fw-bold text-primary">₹${f.price}</td>
+                <td><span class="badge bg-success bg-opacity-10 text-success">Available</span></td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary border-0 rounded-pill me-1" onclick="editFood(${f.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger border-0 rounded-pill" onclick="deleteFood(${f.id})">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function editFood(id) {
+        const food = allFoods.find(f => f.id === id);
+        if (food) {
+            document.getElementById('edit_food_id').value = food.id;
+            document.getElementById('edit_food_name').value = food.name;
+            document.getElementById('edit_food_price').value = food.price;
+            document.getElementById('edit_food_category').value = food.category;
+            document.getElementById('edit_food_image_url').value = food.image_url || '';
+            new bootstrap.Modal(document.getElementById('editDishModal')).show();
+        }
+    }
+
+    document.getElementById('editDishForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const id = document.getElementById('edit_food_id').value;
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+
+        const res = await fetch(`/api/settings/food/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+            Swal.fire('Success', 'Dish updated successfully!', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('editDishModal')).hide();
+            loadFoods();
+        }
+    };
+
+    async function saveSettings(e) {
+        e.preventDefault();
+        const data = {
+            hotel_name: document.getElementById('hotel_name').value,
+            address: document.getElementById('address').value,
+            gst_number: document.getElementById('gst_number').value,
+            tax_percentage: parseFloat(document.getElementById('tax_percentage').value),
+            logo_url: document.getElementById('logo_url').value
+        };
+
+        const res = await fetch('/api/settings/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+            Swal.fire('Success', 'Settings updated successfully!', 'success');
+        }
+    }
+
+    async function addDish(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+
+        const res = await fetch('/api/settings/food', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+            Swal.fire('Success', 'Dish added to menu!', 'success');
+            e.target.reset();
+            bootstrap.Modal.getInstance(document.getElementById('addDishModal')).hide();
+            loadFoods();
+        }
+    }
+
+    async function deleteFood(id) {
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: "This dish will be removed from the menu!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+        });
+
+        if (result.isConfirmed) {
+            const res = await fetch(`/api/settings/food/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                Swal.fire('Deleted!', 'The dish has been removed.', 'success');
+                loadFoods();
+            }
+        }
+    }
+</script>
+{% endblock %}

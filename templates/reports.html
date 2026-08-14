@@ -1,0 +1,573 @@
+{% extends "base.html" %}
+{% block title %}Sales Analytics | GrandServe POS{% endblock %}
+{% block page_title %}Operational Intelligence Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --gs-bg: #f8fafc;
+        --gs-card: #ffffff;
+        --gs-primary: #f97316;
+        /* GrandServe Orange */
+        --gs-blue: #0ea5e9;
+        --gs-green: #10b981;
+        --gs-purple: #8b5cf6;
+        --gs-text: #1e293b;
+        --gs-muted: #64748b;
+        --gs-border: #e2e8f0;
+    }
+
+    body {
+        font-family: 'Outfit', sans-serif;
+        overflow: hidden;
+        /* NO SCROLL */
+        background: #f8fafc;
+    }
+
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('{{ url_for("static", filename="images/bg1.jpg") }}') no-repeat center center fixed;
+        background-size: cover;
+        filter: blur(5px);
+        z-index: -1;
+        transform: scale(1.05);
+    }
+
+    /* ── Viewport Container ────────────────────────────────── */
+    .dashboard-viewport {
+        height: calc(100vh - 110px);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 1.5rem;
+    }
+
+    /* ── Glassmorphism Components ────────────────────────── */
+    .bi-card {
+        background: rgba(255, 255, 255, 0.90);
+        backdrop-filter: blur(12px);
+        border-radius: 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
+    }
+
+    .kpi-pill {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(12px);
+        border-radius: 1rem;
+        padding: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .kpi-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+
+    /* ── Charts ────────────────────────────────────────────── */
+    .chart-container {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+        width: 100%;
+    }
+
+    .section-title {
+        font-size: 0.9rem;
+        font-weight: 800;
+        color: var(--gs-text);
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* ── Table / Lists ─────────────────────────────────────── */
+    .compact-list {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+
+    .list-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .list-item:last-child {
+        border-bottom: none;
+    }
+
+    /* Custom Scrollbar */
+    .compact-list::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .compact-list::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 10px;
+    }
+
+    /* ── Row Heights ───────────────────────────────────────── */
+    .row-kpi {
+        height: 90px;
+    }
+
+    .row-main {
+        flex: 3;
+        min-height: 0;
+    }
+
+    .row-bottom {
+        flex: 2;
+        min-height: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-viewport">
+
+    <!-- ── Top KPI Row (4 KPIs) ── -->
+    <div class="row gx-4 row-kpi">
+        <div class="col-md-3">
+            <div class="kpi-pill" style="border-top: 4px solid #ffc107;">
+                <div class="kpi-icon bg-warning bg-opacity-10 text-warning" style="border-top: 4px solid #ffc107;"><i class="fas fa-wallet"></i></div>
+                <div>
+                    <div class="text-muted x-small fw-bold">REVENUE TODAY</div>
+                    <div class="h5 fw-800 mb-0">₹<span id="kpi-rev">0</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-pill" style="border-top: 4px solid #0d6efd;">
+                <div class="kpi-icon bg-primary bg-opacity-10 text-primary" style="border-top: 4px solid #0d6efd;"><i class="fas fa-receipt"></i></div>
+                <div>
+                    <div class="text-muted x-small fw-bold">TOTAL BILLS</div>
+                    <div class="h5 fw-800 mb-0"><span id="kpi-bills">0</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-pill" style="border-top: 4px solid #198754;">
+                <div class="kpi-icon bg-success bg-opacity-10 text-success" style="border-top: 4px solid #198754;"><i class="fas fa-star"></i></div>
+                <div class="overflow-hidden">
+                    <div class="text-muted x-small fw-bold">BEST SELLER</div>
+                    <div class="h6 fw-800 mb-0 text-truncate"><span id="kpi-best">—</span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="kpi-pill" style="border-top: 4px solid #0dcaf0;">
+                <div class="kpi-icon bg-info bg-opacity-10 text-info" style="border-top: 4px solid #0dcaf0;"><i class="fas fa-chart-line"></i></div>
+                <div>
+                    <div class="text-muted x-small fw-bold">AVG VALUE</div>
+                    <div class="h5 fw-800 mb-0">₹<span id="kpi-avg">0</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Middle Main Row (Large Chart + Insights) ── -->
+    <div class="row gx-4 row-main">
+        <div class="col-md-8 h-100">
+            <div class="bi-card" style="border-top: 4px solid var(--gs-green);">
+                <div class="section-title">
+                    <span><i class="fas fa-chart-area text-primary me-2"></i>REVENUE MOMENTUM (7 DAYS)</span>
+                    <span class="badge bg-light text-muted border px-2 py-1 x-small">LIVE</span>
+                </div>
+                <div class="chart-container" style="height: 250px;">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 h-100 d-flex flex-column gap-2">
+            <!-- Payment Distribution Chart -->
+            <div class="bi-card" style="background: rgba(255, 255, 255, 0.95); border-top: 4px solid var(--gs-green);">
+                <div class="section-title small text-success">
+                    <span><i class="fas fa-chart-pie me-2"></i>PAYMENT DISTRIBUTION</span>
+                </div>
+                <div class="chart-container" style="height: 180px;">
+                    <canvas id="payDistChart"></canvas>
+                </div>
+                <div class="d-flex justify-content-around mt-2 x-small fw-bold text-muted">
+                    <span style="color: var(--gs-green)">CASH: ₹<span id="pay-cash">0</span></span>
+                    <span style="color: var(--gs-blue)">UPI: ₹<span id="pay-upi">0</span></span>
+                    <span style="color: var(--gs-primary)">CARD: ₹<span id="pay-card">0</span></span>
+                </div>
+            </div>
+
+            <!-- Category Analytics (Polar Area) -->
+            <div class="bi-card flex-grow-1"
+                style="background: rgba(255, 255, 255, 0.95); border-top: 4px solid var(--gs-purple);">
+                <div class="section-title small text-purple">
+                    <span><i class="fas fa-layer-group me-2"></i>REVENUE BY CATEGORY</span>
+                </div>
+                <div class="chart-container" style="height: 180px;">
+                    <canvas id="categoryPolarChart"></canvas>
+                </div>
+                <div class="d-flex flex-wrap justify-content-around mt-2 x-small fw-bold text-muted px-2">
+                    <div class="text-center">
+                        <div style="color: #10b981">VEG</div>
+                        <div id="cat-veg">₹0</div>
+                    </div>
+                    <div class="text-center">
+                        <div style="color: #f97316">NON-VEG</div>
+                        <div id="cat-nonveg">₹0</div>
+                    </div>
+                    <div class="text-center">
+                        <div style="color: #8b5cf6">DESSERT</div>
+                        <div id="cat-dessert">₹0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Bottom Detailed Row (Category + Weekly + Top Foods) ── -->
+    <div class="row gx-4 row-bottom">
+        <div class="col-md-4 h-100">
+            <div class="bi-card" style="border-top: 4px solid var(--gs-blue);">
+                <div class="section-title small"><span>CATEGORY MIX</span></div>
+                <div class="chart-container" style="height: 160px;">
+                    <canvas id="catChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 h-100">
+            <div class="bi-card" style="border-top: 4px solid var(--gs-purple);">
+                <div class="section-title small"><span>WEEKLY PERFORMANCE</span></div>
+                <div class="chart-container" style="height: 160px;">
+                    <canvas id="weekChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 h-100">
+            <div class="bi-card" style="border-top: 4px solid var(--gs-primary);">
+                <div class="section-title small"><span>TOP 5 DELICACIES</span></div>
+                <div class="compact-list" id="topItems">
+                    <!-- Loaded via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    Chart.defaults.font.family = "'Outfit', sans-serif";
+    Chart.defaults.color = '#64748b';
+
+    document.addEventListener('DOMContentLoaded', function () {
+        initCharts();
+        loadInitialData();
+
+        // Live Refresh for all stats every 10 seconds
+        setInterval(() => {
+            updateLiveMomentum();
+            updateLiveDailyStats();
+        }, 10000);
+    });
+
+    let payChart, categoryPolarChart, mainChart;
+
+    const topColors = ['#f97316', '#0ea5e9', '#10b981', '#8b5cf6', '#ec4899'];
+
+    async function loadInitialData() {
+        try {
+            // 1. Fetch Daily Stats (One-time)
+            const res = await fetch('/api/reports/daily');
+            const data = await res.json();
+
+            // KPIs
+            document.getElementById('kpi-rev').innerText = (data.total_sales || 0).toLocaleString('en-IN');
+            document.getElementById('kpi-bills').innerText = data.num_bills || 0;
+            document.getElementById('kpi-best').innerText = data.best_selling || 'N/A';
+            document.getElementById('kpi-avg').innerText = Math.round(data.avg_order_value || 0).toLocaleString('en-IN');
+
+            // Payments & Category Polar
+            if (data.payments && payChart) {
+                const c = data.payments.Cash || 0, u = data.payments.UPI || 0, r = data.payments.Card || 0;
+                document.getElementById('pay-cash').innerText = c.toLocaleString('en-IN');
+                document.getElementById('pay-upi').innerText = u.toLocaleString('en-IN');
+                document.getElementById('pay-card').innerText = r.toLocaleString('en-IN');
+                payChart.data.datasets[0].data = [c, u, r];
+                payChart.update();
+            }
+
+            if (data.category_sales) {
+                const veg = data.category_sales['Veg'] || 0, nonVeg = data.category_sales['Non-Veg'] || 0, dessert = data.category_sales['Dessert'] || 0;
+                document.getElementById('cat-veg').innerText = '₹' + Math.round(veg).toLocaleString('en-IN');
+                document.getElementById('cat-nonveg').innerText = '₹' + Math.round(nonVeg).toLocaleString('en-IN');
+                document.getElementById('cat-dessert').innerText = '₹' + Math.round(dessert).toLocaleString('en-IN');
+
+                if (categoryPolarChart) {
+                    categoryPolarChart.data.datasets[0].data = [veg, nonVeg, dessert];
+                    categoryPolarChart.update();
+                }
+                if (window.catChartInstance) {
+                    window.catChartInstance.data.datasets[0].data = [nonVeg, veg, dessert];
+                    window.catChartInstance.update();
+                }
+            }
+
+            // Top Items (By Revenue)
+            const items = data.food_sales ? data.food_sales.slice(0, 5).map((f, idx) => ({
+                name: f.name, 
+                val: '₹' + (f.revenue || 0).toLocaleString('en-IN'),
+                pct: Math.min(100, (f.revenue / (data.total_sales || 1)) * 100 * 2), // Scale for visibility
+                color: topColors[idx % topColors.length]
+            })) : [];
+            if (items.length > 0) {
+                document.getElementById('topItems').innerHTML = items.map(i => `
+                    <div class="list-item py-1">
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between x-small fw-bold mb-1">
+                                <span>${i.name}</span><span style="color: ${i.color}">${i.val}</span>
+                            </div>
+                            <div class="progress" style="height: 4px; background: rgba(0,0,0,0.05);"><div class="progress-bar" style="width: ${i.pct}%; background: ${i.color}"></div></div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // 2. Fetch Momentum & Weekly (One-time initially)
+            updateLiveMomentum(); // Also updates mainChart the first time
+
+            const anaRes = await fetch('/api/reports/analytics');
+            const anaData = await anaRes.json();
+            if (anaData.labels && window.weekChartInstance) {
+                const dayLabels = anaData.labels.map(l => new Date(l).toLocaleDateString('en-US', { weekday: 'short' }));
+                window.weekChartInstance.data.labels = dayLabels;
+                window.weekChartInstance.data.datasets[0].data = anaData.values;
+                window.weekChartInstance.update();
+            }
+
+        } catch (e) { console.error('Error loading data:', e); }
+    }
+
+    async function updateLiveDailyStats() {
+        try {
+            const res = await fetch('/api/reports/daily');
+            const data = await res.json();
+
+            // Update KPIs
+            document.getElementById('kpi-rev').innerText = (data.total_sales || 0).toLocaleString('en-IN');
+            document.getElementById('kpi-bills').innerText = data.num_bills || 0;
+            document.getElementById('kpi-best').innerText = data.best_selling || 'N/A';
+            document.getElementById('kpi-avg').innerText = Math.round(data.avg_order_value || 0).toLocaleString('en-IN');
+
+            // Update Payment Chart
+            if (data.payments && payChart) {
+                const c = data.payments.Cash || 0, u = data.payments.UPI || 0, r = data.payments.Card || 0;
+                document.getElementById('pay-cash').innerText = c.toLocaleString('en-IN');
+                document.getElementById('pay-upi').innerText = u.toLocaleString('en-IN');
+                document.getElementById('pay-card').innerText = r.toLocaleString('en-IN');
+                payChart.data.datasets[0].data = [c, u, r];
+                payChart.update('none');
+            }
+
+            // Update Category Charts
+            if (data.category_sales) {
+                const veg = data.category_sales['Veg'] || 0, nonVeg = data.category_sales['Non-Veg'] || 0, dessert = data.category_sales['Dessert'] || 0;
+                document.getElementById('cat-veg').innerText = '₹' + Math.round(veg).toLocaleString('en-IN');
+                document.getElementById('cat-nonveg').innerText = '₹' + Math.round(nonVeg).toLocaleString('en-IN');
+                document.getElementById('cat-dessert').innerText = '₹' + Math.round(dessert).toLocaleString('en-IN');
+
+                if (categoryPolarChart) {
+                    categoryPolarChart.data.datasets[0].data = [veg, nonVeg, dessert];
+                    categoryPolarChart.update('none');
+                }
+                if (window.catChartInstance) {
+                    window.catChartInstance.data.datasets[0].data = [nonVeg, veg, dessert];
+                    window.catChartInstance.update('none');
+                }
+            }
+
+            // Update Top Items (By Revenue with Colors)
+            const items = data.food_sales ? data.food_sales.slice(0, 5).map((f, idx) => ({
+                name: f.name, 
+                val: '₹' + (f.revenue || 0).toLocaleString('en-IN'),
+                pct: Math.min(100, (f.revenue / (data.total_sales || 1)) * 100 * 2), 
+                color: topColors[idx % topColors.length]
+            })) : [];
+            if (items.length > 0) {
+                document.getElementById('topItems').innerHTML = items.map(i => `
+                    <div class="list-item py-1">
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between x-small fw-bold mb-1">
+                                <span>${i.name}</span><span style="color: ${i.color}">${i.val}</span>
+                            </div>
+                            <div class="progress" style="height: 4px; background: rgba(0,0,0,0.05);"><div class="progress-bar" style="width: ${i.pct}%; background: ${i.color}"></div></div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        } catch (e) { console.error('Error updating live stats:', e); }
+    }
+
+    async function updateLiveMomentum() {
+        try {
+            const res = await fetch('/api/reports/analytics');
+            const data = await res.json();
+            if (data.labels && mainChart) {
+                mainChart.data.labels = data.labels.map(l => new Date(l).toLocaleDateString('en-US', { weekday: 'short' }));
+                mainChart.data.datasets[0].data = data.values;
+                mainChart.update();
+            }
+        } catch (e) { console.error('Error updating momentum:', e); }
+    }
+
+    function initCharts() {
+        // Main Momentum
+        const mainCtx = document.getElementById('mainChart').getContext('2d');
+        const grad = mainCtx.createLinearGradient(0, 0, 0, 300);
+        grad.addColorStop(0, 'rgba(16, 185, 129, 0.1)');
+        grad.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+        mainChart = new Chart(mainCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Revenue',
+                    data: [45000, 52000, 48000, 61000, 75000, 92000, 84000],
+                    borderColor: '#10b981',
+                    borderWidth: 4,
+                    fill: true,
+                    backgroundColor: grad,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#10b981',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        grid: { color: 'rgba(0,0,0,0.03)' },
+                        ticks: { font: { size: 10 } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 11, weight: 'bold' } }
+                    }
+                }
+            }
+        });
+
+        // Payment Distribution Donut
+        payChart = new Chart(document.getElementById('payDistChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Cash', 'UPI', 'Card'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: ['#10b981', '#0ea5e9', '#f97316'],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 10, font: { size: 9, weight: 'bold' }, padding: 15 }
+                    }
+                }
+            }
+        });
+
+        // Category Revenue Polar Area Chart
+        categoryPolarChart = new Chart(document.getElementById('categoryPolarChart'), {
+            type: 'polarArea',
+            data: {
+                labels: ['Veg', 'Non-Veg', 'Dessert'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: [
+                        'rgba(16, 185, 129, 0.7)',
+                        'rgba(249, 115, 22, 0.7)',
+                        'rgba(139, 92, 246, 0.7)'
+                    ],
+                    borderColor: '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        ticks: { display: false },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        // Bottom Category Doughnut
+        window.catChartInstance = new Chart(document.getElementById('catChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Non-Veg', 'Veg', 'Dessert'],
+                datasets: [{
+                    data: [0, 0, 0],
+                    backgroundColor: ['#f97316', '#10b981', '#8b5cf6'],
+                    borderWidth: 0
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } } }
+        });
+
+        // Weekly
+        window.weekChartInstance = new Chart(document.getElementById('weekChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    data: [0, 0, 0, 0, 0, 0, 0],
+                    backgroundColor: '#0ea5e9',
+                    borderRadius: 5
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { font: { size: 10 } } } } }
+        });
+    }
+</script>
+{% endblock %}

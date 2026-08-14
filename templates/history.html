@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+{% block title %}Bill History | GrandServe POS{% endblock %}
+{% block page_title %}Transaction Ledger Audit{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --hist-bg: #f3f7fb;
+        --hist-card: #ffffff;
+        --hist-primary: #0ea5e9;
+        --hist-orange: #f97316;
+        --hist-text: #1e293b;
+        --hist-muted: #64748b;
+        --hist-border: rgba(226, 232, 240, 0.8);
+    }
+
+    body {
+        font-family: 'Outfit', sans-serif;
+        min-height: 100vh;
+        background: #f3f7fb;
+        /* Fallback */
+    }
+
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url('{{ url_for("static", filename="images/bghis.jpg") }}') no-repeat center center fixed;
+        background-size: cover;
+        background-color: #c81111;
+        filter: blur(10px);
+        z-index: -1;
+        transform: scale(1.05);
+        /* Prevents white edges from blur */
+    }
+
+    /* ── History Header Strip ────────────────────────────── */
+    .hist-strip {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(15px);
+        border-radius: 1.5rem;
+        padding: 1.25rem 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    /* ── Ledger Card ─────────────────────────────────────── */
+    .ledger-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(15px);
+        border-radius: 2rem;
+        padding: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    }
+
+    .table thead th {
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--hist-muted);
+        padding: 1.25rem 1rem;
+        border-bottom: 2px solid #f1f5f9;
+    }
+
+    .table tbody td {
+        padding: 1.25rem 1rem;
+        vertical-align: middle;
+        font-size: 0.9rem;
+        color: var(--hist-text);
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .tr-hover:hover {
+        background-color: #f8fafc;
+    }
+
+    .badge-payment {
+        padding: 0.45rem 1.25rem;
+        border-radius: 100px;
+        font-weight: 700;
+        font-size: 0.75rem;
+    }
+
+    /* ── Filter Controls ─────────────────────────────────── */
+    .hist-filter-group {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .hist-input {
+        border-radius: 100px;
+        border: 1px solid #e2e8f0;
+        padding: 0.6rem 1.5rem;
+        font-size: 0.85rem;
+        transition: all 0.3s;
+    }
+
+    .hist-input:focus {
+        border-color: var(--hist-primary);
+        box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+        outline: none;
+    }
+
+    /* ── Action Buttons ──────────────────────────────────── */
+    .btn-action {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        border: none;
+        background: #f1f5f9;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-2px);
+    }
+
+    /* ── Invoice Modal ───────────────────────────────────── */
+    .receipt-container {
+        background: white;
+        padding: 3rem;
+        border-radius: 1.5rem;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .receipt-header {
+        border-bottom: 2px dashed #e2e8f0;
+        padding-bottom: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .receipt-footer {
+        border-top: 2px dashed #e2e8f0;
+        padding-top: 2rem;
+        margin-top: 2rem;
+    }
+
+    @media print {
+        body::before, #sidebar-wrapper, .navbar, .modal-footer, .btn, .hist-strip, .ledger-card, #menu-toggle {
+            display: none !important;
+        }
+        body, #wrapper, #page-content-wrapper, .container-fluid, .modal, .modal-dialog, .modal-content {
+            background: #fff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            width: 100% !important;
+        }
+        .modal { position: absolute !important; top: 0; left: 0; display: block !important; opacity: 1 !important; }
+        #printableInvoice { display: block !important; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-xl-5">
+
+    <!-- ── History Header Strip ── -->
+    <div class="hist-strip" data-aos="fade-down">
+        <div>
+            <h4 class="fw-800 mb-0">Transaction Ledger</h4>
+            <div class="d-flex align-items-center mt-1">
+                <span class="badge bg-soft-blue px-3 py-1 rounded-pill text-primary x-small fw-bold">
+                    <i class="fas fa-database me-1"></i> <span id="bill-count-total">0</span> TOTAL RECORDS
+                </span>
+            </div>
+        </div>
+        <div class="hist-filter-group">
+            <div class="position-relative">
+                <i class="fas fa-search position-absolute text-muted" style="left: 15px; top: 12px;"></i>
+                <input type="text" id="historySearch" class="hist-input ps-5" placeholder="Search bill or guest..."
+                    style="width: 250px;">
+            </div>
+            <input type="date" id="dateFilter" class="hist-input">
+            <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="loadHistory()">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ── Ledger Table ── -->
+    <div class="ledger-card" data-aos="fade-up">
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Bill Reference</th>
+                        <th>Timestamp</th>
+                        <th>Guest Name</th>
+                        <th>Grand Total</th>
+                        <th>Method</th>
+                        <th class="text-end">Operations</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    <!-- Data loaded via JS -->
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="spinner-border text-primary opacity-25" role="status"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- ── Digital Invoice Reprint Modal ── -->
+<div class="modal fade" id="invoiceModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 2rem; overflow: hidden;">
+            <div class="modal-body p-0" id="printableInvoice">
+                <!-- Injected via JS -->
+            </div>
+            <div class="modal-footer bg-light border-0 p-4">
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Close
+                    Audit</button>
+                <button type="button" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm"
+                    onclick="window.print()">
+                    <i class="fas fa-print me-2"></i> Print Invoice
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        loadHistory();
+        document.getElementById('historySearch').oninput = filterHistory;
+        document.getElementById('dateFilter').onchange = filterHistory;
+    });
+
+    let allBills = [];
+
+    async function loadHistory() {
+        try {
+            const res = await fetch('/api/bills/');
+            allBills = await res.json();
+            document.getElementById('bill-count-total').innerText = allBills.length;
+            renderHistory(allBills);
+        } catch (e) { console.error(e); }
+    }
+
+    function renderHistory(bills) {
+        const tbody = document.getElementById('historyTableBody');
+        tbody.innerHTML = '';
+
+        if (bills.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted">
+                <i class="fas fa-folder-open fa-3x mb-3 opacity-25"></i>
+                <p class="fw-bold">No Transaction History Found</p>
+            </td></tr>`;
+            return;
+        }
+
+        bills.forEach(bill => {
+            const dateObj = new Date(bill.created_at);
+            const date = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            const time = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const tr = document.createElement('tr');
+            tr.className = 'tr-hover';
+            tr.innerHTML = `
+                <td><span class="fw-800 text-primary">#${bill.bill_number}</span></td>
+                <td>
+                    <div class="fw-bold small">${date}</div>
+                    <div class="text-muted x-small">${time}</div>
+                </td>
+                <td><div class="fw-bold">${bill.customer_name || 'Walk-in Guest'}</div></td>
+                <td><span class="fw-800">₹${bill.grand_total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span></td>
+                <td><span class="badge-payment bg-primary bg-opacity-10 text-primary">${bill.payment_method.toUpperCase()}</span></td>
+                <td class="text-end">
+                    <button class="btn-action me-1" onclick="viewBill(${bill.id})" title="Reprint">
+                        <i class="fas fa-receipt text-primary"></i>
+                    </button>
+                    <button class="btn-action" onclick="deleteBill(${bill.id})" title="Purge Record">
+                        <i class="fas fa-trash-alt text-danger"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function filterHistory() {
+        const query = document.getElementById('historySearch').value.toLowerCase();
+        const dateStr = document.getElementById('dateFilter').value;
+
+        const filtered = allBills.filter(b => {
+            const matchesQuery = b.bill_number.toLowerCase().includes(query) ||
+                (b.customer_name && b.customer_name.toLowerCase().includes(query));
+            const matchesDate = !dateStr || b.created_at.startsWith(dateStr);
+            return matchesQuery && matchesDate;
+        });
+
+        renderHistory(filtered);
+    }
+
+    function viewBill(id) {
+        const bill = allBills.find(b => b.id === id);
+        if (bill) showInvoice(bill);
+    }
+
+    async function deleteBill(id) {
+        const result = await Swal.fire({
+            title: 'Purge Transaction?',
+            text: "This will permanently remove the record from the ledger.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Yes, Purge it!',
+            customClass: { popup: 'rounded-4' }
+        });
+
+        if (result.isConfirmed) {
+            const res = await fetch(`/api/bills/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                Swal.fire({ title: 'Purged!', text: 'Transaction removed.', icon: 'success', customClass: { popup: 'rounded-4' } });
+                loadHistory();
+            }
+        }
+    }
+
+    function showInvoice(bill) {
+        const modal = new bootstrap.Modal(document.getElementById('invoiceModal'));
+        const container = document.getElementById('printableInvoice');
+
+        const itemsHtml = bill.items.map(i => `
+            <div class="d-flex justify-content-between py-2 border-bottom border-light small">
+                <div class="flex-grow-1">
+                    <div class="fw-bold text-dark">${i.name}</div>
+                    <div class="text-muted x-small">${i.quantity} x ₹${i.price}</div>
+                </div>
+                <div class="fw-800 text-dark">₹${(i.price * i.quantity).toFixed(2)}</div>
+            </div>
+        `).join('');
+
+        container.innerHTML = `
+            <div class="receipt-container">
+                <div class="receipt-header text-center">
+                    <div class="h3 fw-900 mb-0">GRANDSERVE</div>
+                    <div class="text-muted small">PREMIUM POS SYSTEMS</div>
+                    <div class="mt-3 x-small fw-bold text-uppercase tracking-wider">Transaction Invoice</div>
+                </div>
+                
+                <div class="row g-3 mb-4 x-small">
+                    <div class="col-6">
+                        <div class="text-muted fw-bold">BILL REFERENCE</div>
+                        <div class="fw-900 text-dark">#${bill.bill_number}</div>
+                    </div>
+                    <div class="col-6 text-end">
+                        <div class="text-muted fw-bold">DATE & TIME</div>
+                        <div class="fw-900 text-dark">${new Date(bill.created_at).toLocaleString()}</div>
+                    </div>
+                    <div class="col-12 mt-2">
+                        <div class="text-muted fw-bold">GUEST DETAILS</div>
+                        <div class="fw-900 text-dark">${bill.customer_name || 'WALK-IN GUEST'}</div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="text-muted x-small fw-bold mb-2 uppercase">Order Summary</div>
+                    ${itemsHtml}
+                </div>
+
+                <div class="bg-light p-3 rounded-4 w-100 mb-4">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span class="text-muted">Subtotal</span>
+                        <span class="fw-bold">₹${bill.subtotal.toFixed(2)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span class="text-muted">GST (18%)</span>
+                        <span class="fw-bold">₹${bill.gst.toFixed(2)}</span>
+                    </div>
+                    <div class="d-flex justify-content-between h5 fw-900 mt-2 pt-2 border-top">
+                        <span>Grand Total</span>
+                        <span class="text-primary">₹${bill.grand_total.toFixed(2)}</span>
+                    </div>
+                </div>
+
+                <div class="receipt-footer text-center">
+                    <div class="x-small text-muted mb-3">Verified by GrandServe Intelligence System</div>
+                    <div class="d-flex justify-content-center gap-2">
+                        <span class="badge-payment bg-soft-blue text-primary">${bill.payment_method.toUpperCase()}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        modal.show();
+    }
+</script>
+{% endblock %}
