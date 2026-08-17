@@ -2,6 +2,7 @@ from flask import Flask, render_template
 from config import Config
 from flask_cors import CORS
 from extensions import db
+import os
 
 def create_app():
     app = Flask(__name__)
