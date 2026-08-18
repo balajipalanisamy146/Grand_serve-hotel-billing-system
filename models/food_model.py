@@ -7,7 +7,7 @@ class Food(db.Model):
     price = db.Column(db.Float, nullable=False)
     category = db.Column(db.String(50), nullable=False)
     rating = db.Column(db.Float, default=4.5)
-    image_url = db.Column(db.String(255), nullable=True)
+    image_url = db.Column(db.Text, nullable=True)
     available = db.Column(db.Boolean, default=True)
 
     def to_dict(self):
