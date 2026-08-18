@@ -29,8 +29,13 @@ def create_app():
             db.session.commit()
             
             # Seed default food and settings for the admin user
-            from database.db import seed_data
-            seed_data(admin_user.id)
+            #from database.db import seed_data
+            #seed_data(admin_user.id)
+
+            # Seed menu only if Food table is empty
+            if Food.query.count() == 0:
+               from database.db import seed_data
+               seed_data(admin_user.id)
 
     # Register Blueprints
     from routes.bill_routes import bill_bp
@@ -86,8 +91,6 @@ def create_app():
 
     return app
 
-from database.db import seed_data
-seed_data(1)
 
 
 if __name__ == '__main__':
