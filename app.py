@@ -86,6 +86,9 @@ def create_app():
 
     return app
 
+from database.db import seed_data
+seed_data(1)
+
 
 if __name__ == '__main__':
     app = create_app()
