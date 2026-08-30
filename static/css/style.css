@@ -243,15 +243,22 @@ body {
 /* Responsive Fixes */
 @media (max-width: 991.98px) {
     .glass-sidebar {
-        margin-left: -280px;
+        left: 0;
+        width: 260px;
+        margin-left: 0;
+        transform: translateX(-105%);
+        opacity: 1;
+        box-shadow: 0 0 25px rgba(0, 0, 0, 0.18);
+    }
+
+    #wrapper.toggled .glass-sidebar {
+        transform: translateX(0);
+        opacity: 1;
     }
 
     #page-content-wrapper {
         margin-left: 0;
-    }
-
-    #wrapper.toggled .glass-sidebar {
-        margin-left: 0;
+        width: 100%;
     }
 
     #wrapper.toggled #page-content-wrapper {

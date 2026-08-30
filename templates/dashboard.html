@@ -109,6 +109,60 @@
         font-weight: 800;
         font-size: 0.9rem;
     }
+
+    @media (max-width: 767.98px) {
+        .row.g-4.mb-5 {
+            --bs-gutter-x: 0.75rem;
+            --bs-gutter-y: 0.75rem;
+        }
+
+        .stat-card {
+            padding: 0.85rem 0.9rem;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            margin-right: 0.8rem;
+            font-size: 1rem;
+        }
+
+        .stat-card h4,
+        .stat-card h5 {
+            font-size: 1.05rem;
+            line-height: 1.2;
+        }
+
+        .stat-card h6 {
+            font-size: 0.68rem;
+            letter-spacing: 0.05em;
+        }
+
+        #dishGrid > .col {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+
+        #dishGrid .glass-card {
+            padding: 0.7rem !important;
+        }
+
+        #dishGrid .glass-card > div:first-child {
+            width: 58px !important;
+            height: 58px !important;
+        }
+
+        #dishGrid .glass-card .ms-3 {
+            min-width: 0;
+            margin-left: 0.75rem !important;
+        }
+
+        #dishGrid .glass-card h6 {
+            white-space: normal;
+            line-height: 1.35;
+            font-size: 0.92rem;
+        }
+    }
 </style>
 {% endblock %}
 
