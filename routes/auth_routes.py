@@ -26,9 +26,13 @@ def register():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
+    confirm_password = data.get('confirmPassword')
     
-    if not username or not password:
-        return jsonify({'success': False, 'message': 'Username and password are required'}), 400
+    if not username or not password or not confirm_password:
+        return jsonify({'success': False, 'message': 'Username, password, and password confirmation are required'}), 400
+
+    if password != confirm_password:
+        return jsonify({'success': False, 'message': 'Passwords do not match'}), 400
         
     existing_user = User.query.filter_by(username=username).first()
     if existing_user:

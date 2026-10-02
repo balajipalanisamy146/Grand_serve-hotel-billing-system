@@ -46,6 +46,10 @@
                 <label class="form-label text-white small fw-bold">Password</label>
                 <input type="password" class="form-control rounded-pill px-4 py-2" id="password" required>
             </div>
+            <div class="mb-4 text-start" id="confirmPasswordGroup" hidden>
+                <label class="form-label text-white small fw-bold" for="confirmPassword">Confirm Password</label>
+                <input type="password" class="form-control rounded-pill px-4 py-2" id="confirmPassword" autocomplete="new-password">
+            </div>
             <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold shadow-sm mb-3" id="authBtn">
                 Login to System
             </button>
@@ -69,6 +73,8 @@
         const cardTitle = document.getElementById('authTitle');
         const cardSub = document.getElementById('authSub');
         const submitBtn = document.getElementById('authBtn');
+        const confirmPasswordGroup = document.getElementById('confirmPasswordGroup');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
 
         let isLogin = true;
 
@@ -82,6 +88,9 @@
                 toggleText.innerHTML = `Don't have an account? <a href="#" id="toggleAuth" class="text-primary fw-bold text-decoration-none">Register here</a>`;
                 document.getElementById('username').value = 'admin';
                 document.getElementById('password').value = 'admin123';
+                confirmPasswordInput.value = '';
+                confirmPasswordInput.required = false;
+                confirmPasswordGroup.hidden = true;
             } else {
                 cardTitle.textContent = "Create Account";
                 cardSub.textContent = "Register to start your own POS system";
@@ -89,6 +98,9 @@
                 toggleText.innerHTML = `Already have an account? <a href="#" id="toggleAuth" class="text-primary fw-bold text-decoration-none">Login here</a>`;
                 document.getElementById('username').value = '';
                 document.getElementById('password').value = '';
+                confirmPasswordInput.value = '';
+                confirmPasswordInput.required = true;
+                confirmPasswordGroup.hidden = false;
             }
             // Re-bind the click event
             document.getElementById('toggleAuth').onclick = toggleAuth.onclick;
@@ -98,13 +110,20 @@
             e.preventDefault();
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            if (!isLogin && password !== confirmPassword) {
+                Swal.fire('Error', 'Passwords do not match', 'error');
+                return;
+            }
 
             const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+            const credentials = isLogin ? { username, password } : { username, password, confirmPassword };
 
             const res = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify(credentials)
             });
 
             const data = await res.json();
